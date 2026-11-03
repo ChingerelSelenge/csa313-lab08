@@ -154,4 +154,42 @@ class CourseRegistrationServiceTest {
         verify(emailSender, never())
                 .send(anyString(), anyString(), anyString());
     }
+
+    @Test
+    void emailFails_registerStillReturnsOK() {
+
+        // Arrange
+        Student student = new Student(
+                "S004",
+                "student4@must.edu.mn",
+                true,
+                List.of("CS101"));
+
+        when(repository.findStudent("S004"))
+                .thenReturn(student);
+
+        when(repository.courseExists("CS102"))
+                .thenReturn(true);
+
+        when(repository.prerequisites("CS102"))
+                .thenReturn(List.of("CS101"));
+
+        doThrow(new RuntimeException("Email server unavailable"))
+                .when(emailSender)
+                .send(anyString(), anyString(), anyString());
+
+        // Act
+        String result = service.register("S004", "CS102");
+
+        // Assert
+        assertEquals("OK", result);
+
+        // Verify
+        verify(repository).saveRegistration("S004", "CS102");
+
+        verify(emailSender).send(
+                eq("student4@must.edu.mn"),
+                eq("Бүртгэл баталгаажлаа"),
+                contains("CS102"));
+    }
 }

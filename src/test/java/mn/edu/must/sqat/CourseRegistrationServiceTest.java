@@ -249,4 +249,45 @@ class CourseRegistrationServiceTest {
 
         assertTrue(actualBody.contains("CS103"));
     }
+
+    @ParameterizedTest
+    @CsvSource({
+            "S999, CS102, false, true, true, ERROR_NO_STUDENT",
+            "S002, CS102, true, false, true, ERROR_INACTIVE_STUDENT",
+            "S003, CS999, true, true, false, ERROR_NO_COURSE"
+    })
+    void registrationError_returnsExpectedResult(
+            String studentId,
+            String courseId,
+            boolean studentExists,
+            boolean active,
+            boolean courseExists,
+            String expectedResult) {
+
+        // Arrange
+        Student student = studentExists
+                ? new Student(studentId, "test@must.edu.mn", active, List.of())
+                : null;
+
+        lenient().when(repository.findStudent(studentId))
+                .thenReturn(student);
+
+        lenient().when(repository.courseExists(courseId))
+                .thenReturn(courseExists);
+
+        lenient().when(repository.prerequisites(courseId))
+                .thenReturn(List.of());
+
+        // Act
+        String result = service.register(studentId, courseId);
+
+        // Assert
+        assertEquals(expectedResult, result);
+
+        // Verify
+        verify(repository, never())
+                .saveRegistration(anyString(), anyString());
+
+        verifyNoInteractions(emailSender);
+    }
 }

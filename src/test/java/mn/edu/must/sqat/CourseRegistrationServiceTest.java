@@ -71,4 +71,27 @@ class CourseRegistrationServiceTest {
                 contains("CS102")
         );
     }
+
+    @Test
+void nonExistingStudent_register_returnsErrorNoStudent() {
+
+    // Arrange
+    when(repository.findStudent("S999"))
+            .thenReturn(null);
+
+    // Act
+    String result = service.register("S999", "CS102");
+
+    // Assert
+    assertEquals("ERROR_NO_STUDENT", result);
+
+    // Verify
+    verify(repository).findStudent("S999");
+
+    verify(repository, never())
+            .saveRegistration(anyString(), anyString());
+
+    verify(emailSender, never())
+            .send(anyString(), anyString(), anyString());
+}
 }

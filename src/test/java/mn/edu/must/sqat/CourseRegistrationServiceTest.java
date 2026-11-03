@@ -33,7 +33,7 @@ class CourseRegistrationServiceTest {
         service = new CourseRegistrationService(repository, emailSender);
     }
 
-        @Test
+    @Test
     void activeStudent_registerSuccessfully_returnsOK() {
 
         // Arrange
@@ -41,8 +41,7 @@ class CourseRegistrationServiceTest {
                 "S001",
                 "student@must.edu.mn",
                 true,
-                List.of("CS101")
-        );
+                List.of("CS101"));
 
         when(repository.findStudent("S001"))
                 .thenReturn(student);
@@ -68,30 +67,54 @@ class CourseRegistrationServiceTest {
         verify(emailSender).send(
                 eq("student@must.edu.mn"),
                 eq("Бүртгэл баталгаажлаа"),
-                contains("CS102")
-        );
+                contains("CS102"));
     }
 
     @Test
-void nonExistingStudent_register_returnsErrorNoStudent() {
+    void nonExistingStudent_register_returnsErrorNoStudent() {
 
-    // Arrange
-    when(repository.findStudent("S999"))
-            .thenReturn(null);
+        // Arrange
+        when(repository.findStudent("S999"))
+                .thenReturn(null);
 
-    // Act
-    String result = service.register("S999", "CS102");
+        // Act
+        String result = service.register("S999", "CS102");
 
-    // Assert
-    assertEquals("ERROR_NO_STUDENT", result);
+        // Assert
+        assertEquals("ERROR_NO_STUDENT", result);
 
-    // Verify
-    verify(repository).findStudent("S999");
+        // Verify
+        verify(repository).findStudent("S999");
 
-    verify(repository, never())
-            .saveRegistration(anyString(), anyString());
+        verify(repository, never())
+                .saveRegistration(anyString(), anyString());
 
-    verify(emailSender, never())
-            .send(anyString(), anyString(), anyString());
-}
+        verify(emailSender, never())
+                .send(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void inactiveStudent_register_returnsErrorInactiveStudent() {
+
+        // Arrange
+        Student student = new Student(
+                "S002",
+                "inactive@must.edu.mn",
+                false,
+                List.of());
+
+        when(repository.findStudent("S002"))
+                .thenReturn(student);
+
+        // Act
+        String result = service.register("S002", "CS102");
+
+        // Assert
+        assertEquals("ERROR_INACTIVE_STUDENT", result);
+
+        // Verify
+        verify(repository).findStudent("S002");
+
+        verifyNoInteractions(emailSender);
+    }
 }

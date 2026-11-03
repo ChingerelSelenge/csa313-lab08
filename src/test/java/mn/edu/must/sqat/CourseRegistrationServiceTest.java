@@ -117,4 +117,41 @@ class CourseRegistrationServiceTest {
 
         verifyNoInteractions(emailSender);
     }
+
+    @Test
+    void missingPrerequisites_register_returnsErrorPrerequisites() {
+
+        // Arrange
+        Student student = new Student(
+                "S003",
+                "student3@must.edu.mn",
+                true,
+                List.of());
+
+        when(repository.findStudent("S003"))
+                .thenReturn(student);
+
+        when(repository.courseExists("CS102"))
+                .thenReturn(true);
+
+        when(repository.prerequisites("CS102"))
+                .thenReturn(List.of("CS101"));
+
+        // Act
+        String result = service.register("S003", "CS102");
+
+        // Assert
+        assertEquals("ERROR_PREREQUISITES", result);
+
+        // Verify
+        verify(repository).findStudent("S003");
+        verify(repository).courseExists("CS102");
+        verify(repository).prerequisites("CS102");
+
+        verify(repository, never())
+                .saveRegistration(anyString(), anyString());
+
+        verify(emailSender, never())
+                .send(anyString(), anyString(), anyString());
+    }
 }

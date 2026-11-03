@@ -209,4 +209,44 @@ class CourseRegistrationServiceTest {
         // Verify: Хамаарлуудтай огт харьцаагүй
         verifyNoInteractions(repository, emailSender);
     }
+
+    @Test
+    void successfulRegistration_emailBodyContainsCourseCode() {
+
+        // Arrange
+        Student student = new Student(
+                "S007",
+                "student7@must.edu.mn",
+                true,
+                List.of());
+
+        when(repository.findStudent("S007"))
+                .thenReturn(student);
+
+        when(repository.courseExists("CS103"))
+                .thenReturn(true);
+
+        when(repository.prerequisites("CS103"))
+                .thenReturn(List.of());
+
+        // ArgumentCaptor үүсгэх
+        ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
+
+        // Act
+        String result = service.register("S007", "CS103");
+
+        // Assert
+        assertEquals("OK", result);
+
+        // Verify + Capture
+        verify(emailSender).send(
+                eq("student7@must.edu.mn"),
+                eq("Бүртгэл баталгаажлаа"),
+                bodyCaptor.capture());
+
+        // Барьж авсан body-г шалгах
+        String actualBody = bodyCaptor.getValue();
+
+        assertTrue(actualBody.contains("CS103"));
+    }
 }

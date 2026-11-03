@@ -192,4 +192,21 @@ class CourseRegistrationServiceTest {
                 eq("Бүртгэл баталгаажлаа"),
                 contains("CS102"));
     }
+
+    @Test
+    void nullArguments_registerThrowsIllegalArgumentException() {
+
+        // Arrange & Act: studentId null
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.register(null, "CS102"));
+
+        // Arrange & Act: courseId null
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.register("S005", null));
+
+        // Verify: Хамаарлуудтай огт харьцаагүй
+        verifyNoInteractions(repository, emailSender);
+    }
 }
